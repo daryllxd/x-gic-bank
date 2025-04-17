@@ -8,12 +8,12 @@ export const formatDate = (date: Date): string => {
   const year = date.getFullYear();
   const time = date
     .toLocaleString("en-US", {
-      hour: "numeric",
+      hour: "2-digit",
       minute: "2-digit",
       second: "2-digit",
-      hour12: true,
     })
-    .replace(/\s+/g, "");
+    .replace(" AM", "AM")
+    .replace(" PM", "PM");
 
   return `${day} ${month} ${year} ${time}`;
 };
