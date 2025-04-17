@@ -2,6 +2,23 @@ import { Transaction } from "../../types/transaction";
 
 export type UIState = "idle" | "depositing" | "withdrawing";
 
+/**
+ * @description - We want to be able to handle the maximum amount of money in the world, but not go too much
+ */
+const MAX_DEPOSIT_AMOUNT = 1_000_000_000_000_000;
+
+/**
+ * @description - There really is no way to do this accurately (because of floating point) than checking decimal points.
+ */
+function hasValidDecimals(amount: number): boolean {
+  const decimalStr = amount.toString().split(".")[1];
+  return !decimalStr || decimalStr.length <= 2;
+}
+
+function isValidAmount(amount: number): boolean {
+  return amount > 0 && amount <= MAX_DEPOSIT_AMOUNT && hasValidDecimals(amount);
+}
+
 export class BankState {
   private balance: number = 0;
   private transactions: Transaction[] = [];
@@ -45,11 +62,15 @@ export class BankState {
 
   // Transaction operations
   deposit(amount: number): boolean {
-    if (amount <= 0) {
+    if (!isValidAmount(amount)) {
       return false;
     }
 
     const newBalance = this.balance + amount;
+    if (newBalance > MAX_DEPOSIT_AMOUNT) {
+      return false;
+    }
+
     const transaction: Transaction = {
       date: new Date(),
       amount,
@@ -63,7 +84,11 @@ export class BankState {
   }
 
   withdraw(amount: number): boolean {
-    if (amount <= 0 || amount > this.balance) {
+    if (!isValidAmount(amount)) {
+      return false;
+    }
+
+    if (amount > this.balance) {
       return false;
     }
 

@@ -97,6 +97,26 @@ describe("BankState", () => {
 
       expect(bankState.getBalance()).toBe(300);
     });
+
+    it("should reject amounts with more than 2 decimal places", () => {
+      expect(bankState.deposit(100.123)).toBe(false);
+      expect(bankState.deposit(50.555)).toBe(false);
+    });
+
+    it("should accept amounts with up to 2 decimal places", () => {
+      expect(bankState.deposit(100.12)).toBe(true);
+      expect(bankState.deposit(50.5)).toBe(true);
+      expect(bankState.deposit(75)).toBe(true);
+    });
+
+    it("should reject amounts over quadrillion", () => {
+      expect(bankState.deposit(1_000_000_000_000_001)).toBe(false);
+    });
+
+    it("should reject if resulting balance would exceed quadrillion", () => {
+      bankState.deposit(999_999_999_999_999);
+      expect(bankState.deposit(2)).toBe(false);
+    });
   });
 
   describe("Withdrawal Operations", () => {
@@ -166,6 +186,21 @@ describe("BankState", () => {
       });
 
       expect(bankState.getBalance()).toBe(200);
+    });
+
+    it("should reject amounts with more than 2 decimal places", () => {
+      expect(bankState.withdraw(100.123)).toBe(false);
+      expect(bankState.withdraw(50.555)).toBe(false);
+    });
+
+    it("should accept amounts with up to 2 decimal places", () => {
+      expect(bankState.withdraw(100.12)).toBe(true);
+      expect(bankState.withdraw(50.5)).toBe(true);
+      expect(bankState.withdraw(75)).toBe(true);
+    });
+
+    it("should reject amounts over quadrillion", () => {
+      expect(bankState.withdraw(1_000_000_000_000_001)).toBe(false);
     });
   });
 
