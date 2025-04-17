@@ -1,53 +1,54 @@
 import { Transaction } from "../../types/transaction";
-
-export type UIState = "idle" | "depositing" | "withdrawing";
-
-/**
- * @description - We want to be able to handle the maximum amount of money in the world, but not go too much
- */
-const MAX_DEPOSIT_AMOUNT = 1_000_000_000_000_000;
-
-/**
- * @description - There really is no way to do this accurately (because of floating point) than checking decimal points.
- */
-function hasValidDecimals(amount: number): boolean {
-  const decimalStr = amount.toString().split(".")[1];
-  return !decimalStr || decimalStr.length <= 2;
-}
-
-function isValidAmount(amount: number): boolean {
-  return amount > 0 && amount <= MAX_DEPOSIT_AMOUNT && hasValidDecimals(amount);
-}
+import { createDepositCommand } from "./commands/deposit";
+import { createPrintCommand } from "./commands/print";
+import { createResetCommand } from "./commands/reset";
+import { createWithdrawCommand } from "./commands/withdraw";
+import { UIState } from "./types";
 
 export class BankState {
-  private balance: number = 0;
   private transactions: Transaction[] = [];
   private uiState: UIState = "idle";
 
   constructor() {
-    this.balance = 0;
     this.transactions = [];
     this.uiState = "idle";
   }
 
+  // Commands
+  public readonly deposit = createDepositCommand(this);
+  public readonly withdraw = createWithdrawCommand(this);
+  public readonly print = createPrintCommand(this);
+  public readonly reset = createResetCommand(this);
+
   // Getters
   getBalance(): number {
-    return this.balance;
+    return this.transactions.length > 0
+      ? this.transactions[this.transactions.length - 1].balance
+      : 0;
   }
 
   getTransactions(): Transaction[] {
-    return [...this.transactions];
+    return this.transactions;
   }
 
   getUIState(): UIState {
     return this.uiState;
   }
 
+  // Setters (needed for commands)
+  addTransaction(transaction: Transaction): void {
+    this.transactions.push(transaction);
+  }
+
+  setUIState(state: UIState): void {
+    this.uiState = state;
+  }
+
+  // UI State management
   isAwaitingInput(): boolean {
     return this.uiState === "depositing" || this.uiState === "withdrawing";
   }
 
-  // State transitions
   startDeposit(): void {
     this.uiState = "depositing";
   }
@@ -60,55 +61,7 @@ export class BankState {
     this.uiState = "idle";
   }
 
-  // Transaction operations
-  deposit(amount: number): boolean {
-    if (!isValidAmount(amount)) {
-      return false;
-    }
-
-    const newBalance = this.balance + amount;
-    if (newBalance > MAX_DEPOSIT_AMOUNT) {
-      return false;
-    }
-
-    const transaction: Transaction = {
-      date: new Date(),
-      amount,
-      balance: newBalance,
-    };
-
-    this.transactions.push(transaction);
-    this.balance = newBalance;
-    this.returnToIdle();
-    return true;
-  }
-
-  withdraw(amount: number): boolean {
-    if (!isValidAmount(amount)) {
-      return false;
-    }
-
-    if (amount > this.balance) {
-      return false;
-    }
-
-    const newBalance = this.balance - amount;
-    const transaction: Transaction = {
-      date: new Date(),
-      amount: -amount,
-      balance: newBalance,
-    };
-
-    this.transactions.push(transaction);
-    this.balance = newBalance;
-    this.returnToIdle();
-    return true;
-  }
-
-  // Reset state (useful for testing)
-  reset(): void {
-    this.balance = 0;
+  resetTransactions(): void {
     this.transactions = [];
-    this.uiState = "idle";
   }
 }
