@@ -1,10 +1,7 @@
 import { useEffect, useState } from "react";
-
-interface Transaction {
-  date: Date;
-  amount: number;
-  balance: number;
-}
+import { Transaction } from "./types/transaction";
+import { formatCurrency } from "./utils/formatCurrency";
+import { formatDate } from "./utils/formatDate";
 
 function App() {
   const [input, setInput] = useState("");
@@ -22,25 +19,6 @@ function App() {
     }, 500);
     return () => clearInterval(interval);
   }, []);
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
-  };
-
-  const formatDate = (date: Date) => {
-    return date.toLocaleString("en-US", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: true,
-    });
-  };
 
   const handleCommand = (command: string) => {
     const cmd = command.trim().toUpperCase();
