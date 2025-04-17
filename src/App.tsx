@@ -64,7 +64,6 @@ function App() {
         } your account.`
       );
       bankState.returnToIdle();
-      setOutput((prev) => prev + "\nIs there anything else you'd like to do?");
       showMenu();
       return;
     }
@@ -102,6 +101,8 @@ function App() {
           "Thank you for banking with AwesomeGIC Bank.\nHave a nice day!"
         );
         break;
+      case "":
+        break;
       default:
         setOutput("Invalid command. Please try again.");
         showMenu();
@@ -112,7 +113,7 @@ function App() {
     setOutput(
       (prev) =>
         prev +
-        "\n\n" +
+        "\n" +
         [
           "Is there anything else you'd like to do?",
           "[D]eposit",
