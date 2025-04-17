@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { BankState } from "./features/bank/BankState";
+import { bankStatementTable } from "./features/bank/bankStatementTable";
 import { cn } from "./utils/cn";
 import { formatCurrency } from "./utils/formatCurrency";
-import { formatDate } from "./utils/formatDate";
-
 const WELCOME_MESSAGE =
   "Welcome to AwesomeGIC Bank! What would you like to do?\n[D]eposit\n[W]ithdraw\n[P]rint statement\n[Q]uit";
 
@@ -84,22 +83,7 @@ function App() {
         bankState.startWithdrawal();
         break;
       case "P":
-        const transactions = bankState.getTransactions();
-        if (transactions.length === 0) {
-          setOutput("No transactions to display.");
-          showMenu();
-          return;
-        }
-        const statement = [
-          "Date                  | Amount  | Balance",
-          ...transactions.map(
-            (t) =>
-              `${formatDate(t.date)} | ${formatCurrency(t.amount, {
-                showSymbol: false,
-              })} | ${formatCurrency(t.balance, { showSymbol: false })}`
-          ),
-        ].join("\n");
-        setOutput(statement);
+        setOutput(bankStatementTable(bankState.getTransactions()));
         showMenu();
         break;
       case "Q":
