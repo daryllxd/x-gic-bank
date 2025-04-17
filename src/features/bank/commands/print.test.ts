@@ -15,7 +15,7 @@ describe("print command", () => {
 
   it("should return empty transactions list initially", () => {
     const result = print();
-    expect(result.success).toBe(true);
+    expect(result).toBeSuccess();
     expect(result.result).toEqual([]);
   });
 

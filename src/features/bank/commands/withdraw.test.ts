@@ -52,7 +52,8 @@ describe("withdraw command", () => {
     });
 
     const result = withdraw(100.5);
-    expect(result).toBeSuccess(99.5);
+    expect(result).toBeSuccess();
+    expect(result.result).toBe(99.5);
 
     // Verify transaction was added
     const transactions = bank.getTransactions();

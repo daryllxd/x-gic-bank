@@ -20,7 +20,6 @@ export class BankState {
   public readonly print = createPrintCommand(this);
   public readonly reset = createResetCommand(this);
 
-  // Getters
   getBalance(): number {
     return this.transactions.length > 0
       ? this.transactions[this.transactions.length - 1].balance
@@ -44,7 +43,6 @@ export class BankState {
     this.uiState = state;
   }
 
-  // UI State management
   isAwaitingInput(): boolean {
     return this.uiState === "depositing" || this.uiState === "withdrawing";
   }
