@@ -116,8 +116,8 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4 w-full">
-      <div className="w-full max-w-3xl bg-black text-green-500 font-mono p-6">
+    <div className="min-h-screen bg-black flex items-start p-4 w-full">
+      <div className="w-full max-w-3xl bg-black text-green-500 font-mono">
         <div className="mb-4">
           <pre className="whitespace-pre-wrap" data-testid="output">
             {output ||
@@ -129,6 +129,7 @@ function App() {
           <span className="text-green-500 mr-2">$&nbsp;</span>
           <input
             type="text"
+            data-testid="command-input"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
@@ -139,6 +140,10 @@ function App() {
             }}
             className="bg-black text-green-500 outline-none flex-1"
             autoFocus
+            onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
+              e.preventDefault();
+              e.target.focus();
+            }}
           />
         </div>
       </div>
