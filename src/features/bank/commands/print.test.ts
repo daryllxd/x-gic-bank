@@ -1,24 +1,25 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
+import "../../../test/matchers";
 import { Transaction } from "../../../types/transaction";
 import { BankState } from "../BankState";
 import { createPrintCommand } from "./print";
 
 describe("print command", () => {
-  it("should return empty transactions list initially", () => {
-    const bank = new BankState();
-    const print = createPrintCommand(bank);
+  let bank: BankState;
+  let print: ReturnType<typeof createPrintCommand>;
 
+  beforeEach(() => {
+    bank = new BankState();
+    print = createPrintCommand(bank);
+  });
+
+  it("should return empty transactions list initially", () => {
     const result = print();
-    expect(result).toEqual({
-      success: true,
-      result: [],
-    });
+    expect(result.success).toBe(true);
+    expect(result.result).toEqual([]);
   });
 
   it("should return all transactions in chronological order", () => {
-    const bank = new BankState();
-    const print = createPrintCommand(bank);
-
     // Add transactions
     bank.addTransaction({
       date: new Date("2024-03-20T10:00:00"),
@@ -37,8 +38,7 @@ describe("print command", () => {
     });
 
     const result = print();
-    expect(result.success).toBe(true);
-    expect(result.result).toHaveLength(3);
+    expect(result).toBeSuccess();
 
     if (!result.success || !result.result) {
       throw new Error("Expected successful result with transactions");

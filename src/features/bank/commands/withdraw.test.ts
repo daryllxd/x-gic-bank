@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import "../../../test/matchers";
 import { BankState } from "../BankState";
 import { createWithdrawCommand } from "./withdraw";
 
@@ -13,33 +14,21 @@ describe("withdraw command", () => {
 
   it("should reject negative or zero amounts", () => {
     const negativeResult = withdraw(-100);
-    expect(negativeResult).toEqual({
-      success: false,
-      result: {
-        reason:
-          "Invalid amount: Must be positive, under quadrillion, and have max 2 decimal places",
-      },
-    });
+    expect(negativeResult).toBeFailure(
+      "Invalid amount: Must be positive, under quadrillion, and have max 2 decimal places"
+    );
 
     const zeroResult = withdraw(0);
-    expect(zeroResult).toEqual({
-      success: false,
-      result: {
-        reason:
-          "Invalid amount: Must be positive, under quadrillion, and have max 2 decimal places",
-      },
-    });
+    expect(zeroResult).toBeFailure(
+      "Invalid amount: Must be positive, under quadrillion, and have max 2 decimal places"
+    );
   });
 
   it("should reject amounts with more than 2 decimal places", () => {
     const result = withdraw(100.123);
-    expect(result).toEqual({
-      success: false,
-      result: {
-        reason:
-          "Invalid amount: Must be positive, under quadrillion, and have max 2 decimal places",
-      },
-    });
+    expect(result).toBeFailure(
+      "Invalid amount: Must be positive, under quadrillion, and have max 2 decimal places"
+    );
   });
 
   it("should reject withdrawals that would exceed current balance", () => {
@@ -51,10 +40,7 @@ describe("withdraw command", () => {
     });
 
     const result = withdraw(200); // This would exceed current balance
-    expect(result).toEqual({
-      success: false,
-      result: { reason: "Insufficient funds" },
-    });
+    expect(result).toBeFailure("Insufficient funds");
   });
 
   it("should successfully process valid withdrawals", () => {
@@ -66,10 +52,7 @@ describe("withdraw command", () => {
     });
 
     const result = withdraw(100.5);
-    expect(result).toEqual({
-      success: true,
-      result: 99.5,
-    });
+    expect(result).toBeSuccess(99.5);
 
     // Verify transaction was added
     const transactions = bank.getTransactions();

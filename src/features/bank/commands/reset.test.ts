@@ -1,12 +1,18 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
+import "../../../test/matchers";
 import { BankState } from "../BankState";
 import { createResetCommand } from "./reset";
 
 describe("reset command", () => {
-  it("should clear all transactions and return to idle state", () => {
-    const bank = new BankState();
-    const reset = createResetCommand(bank);
+  let bank: BankState;
+  let reset: ReturnType<typeof createResetCommand>;
 
+  beforeEach(() => {
+    bank = new BankState();
+    reset = createResetCommand(bank);
+  });
+
+  it("should clear all transactions and return to idle state", () => {
     bank.addTransaction({
       date: new Date(),
       amount: 1000,
@@ -16,7 +22,7 @@ describe("reset command", () => {
 
     const result = reset();
 
-    expect(result).toEqual({ success: true });
+    expect(result).toBeSuccess();
     expect(bank.getTransactions()).toHaveLength(0);
   });
 });

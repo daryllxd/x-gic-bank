@@ -1,10 +1,10 @@
-export interface BankCommandResult<T = undefined> {
+export interface BankCommandResult<TReturn = undefined> {
   success: boolean;
-  result?: T | { reason: string };
+  result?: TReturn | { reason: string };
 }
 
-export type BankCommand<T = undefined, Args extends any[] = []> = (
+export type BankCommand<TReturn = undefined, Args extends any[] = []> = (
   ...args: Args
-) => BankCommandResult<T>;
+) => BankCommandResult<TReturn>;
 
 export type UIState = "idle" | "depositing" | "withdrawing";
