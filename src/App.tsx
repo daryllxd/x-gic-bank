@@ -86,9 +86,9 @@ function App() {
           "Date                  | Amount  | Balance",
           ...transactions.map(
             (t) =>
-              `${formatDate(t.date)} | ${formatCurrency(
-                t.amount
-              )} | ${formatCurrency(t.balance)}`
+              `${formatDate(t.date)} | ${formatCurrency(t.amount, {
+                showSymbol: false,
+              })} | ${formatCurrency(t.balance, { showSymbol: false })}`
           ),
         ].join("\n");
         setOutput(statement);
