@@ -1,12 +1,27 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BankState } from "./features/bank/BankState";
+import { cn } from "./utils/cn";
 import { formatCurrency } from "./utils/formatCurrency";
 import { formatDate } from "./utils/formatDate";
 
+const WELCOME_MESSAGE =
+  "Welcome to AwesomeGIC Bank! What would you like to do?\n[D]eposit\n[W]ithdraw\n[P]rint statement\n[Q]uit";
+
 function App() {
   const [input, setInput] = useState("");
-  const [output, setOutput] = useState("");
+  const [output, setOutput] = useState(WELCOME_MESSAGE);
   const [bankState] = useState(() => new BankState());
+  const [showProgress, setShowProgress] = useState(false);
+  const timeoutRef = useRef<any>(null);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleCommand = (command: string) => {
     const cmd = command.trim().toUpperCase();
@@ -91,6 +106,13 @@ function App() {
         setOutput(
           "Thank you for banking with AwesomeGIC Bank.\nHave a nice day!"
         );
+
+        setShowProgress(true);
+
+        timeoutRef.current = setTimeout(() => {
+          setShowProgress(false);
+          setOutput(WELCOME_MESSAGE);
+        }, 2000);
         break;
       case "":
         break;
@@ -116,20 +138,43 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-black flex items-start p-4 w-full">
-      <div className="w-full max-w-3xl bg-black text-green-500 font-mono">
+    <div
+      className="min-h-screen bg-black flex items-start p-4"
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const input = document.querySelector("input");
+        if (input) input.focus();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Tab") {
+          e.preventDefault();
+        }
+      }}
+    >
+      <div className="w-full max-w-3xl bg-black text-green-500 font-mono p-6">
         <div className="mb-4">
           <pre className="whitespace-pre-wrap" data-testid="output">
-            {output ||
-              "Welcome to AwesomeGIC Bank! What would you like to do?\n[D]eposit\n[W]ithdraw\n[P]rint statement\n[Q]uit"}
+            {output}
           </pre>
+          {showProgress && (
+            <div className="w-full h-1 bg-green-900 mt-2">
+              <div
+                className="h-full bg-green-500 animate-progress"
+                style={{ animationDuration: "2s" }}
+              ></div>
+            </div>
+          )}
         </div>
 
-        <div className="flex items-center">
+        <div
+          className={cn("flex items-center", {
+            "opacity-0": showProgress,
+          })}
+        >
           <span className="text-green-500 mr-2">$&nbsp;</span>
           <input
             type="text"
-            data-testid="command-input"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
@@ -140,7 +185,7 @@ function App() {
             }}
             className="bg-black text-green-500 outline-none flex-1"
             autoFocus
-            onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
+            onBlur={(e) => {
               e.preventDefault();
               e.target.focus();
             }}
