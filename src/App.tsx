@@ -3,8 +3,13 @@ import { BankState } from "./features/bank/BankState";
 import { bankStatementTable } from "./features/bank/bankStatementTable";
 import { cn } from "./utils/cn";
 import { formatCurrency } from "./utils/formatCurrency";
-const WELCOME_MESSAGE =
-  "Welcome to AwesomeGIC Bank! What would you like to do?\n[D]eposit\n[W]ithdraw\n[P]rint statement\n[Q]uit";
+const WELCOME_MESSAGE = [
+  "Welcome to AwesomeGIC Bank! What would you like to do?",
+  "[D]eposit",
+  "[W]ithdraw",
+  "[P]rint statement",
+  "[Q]uit",
+].join("\n");
 
 function App() {
   const [input, setInput] = useState("");
@@ -47,27 +52,28 @@ function App() {
         return;
       }
 
-      const success =
+      const result =
         currentUIState === "depositing"
           ? bankState.deposit(amount)
           : bankState.withdraw(amount);
 
-      if (!success) {
+      if (!result.success) {
         setOutput(
           currentUIState === "withdrawing"
             ? "Insufficient funds for withdrawal. Please try a different amount or 'Q' to cancel."
             : "Invalid amount. Please try again or 'Q' to cancel."
         );
         return;
+      } else {
+        const action =
+          currentUIState === "depositing" ? "deposited" : "withdrawn";
+        setOutput(
+          `Thank you. ${formatCurrency(Math.abs(amount))} has been ${action} ${
+            action === "withdrawn" ? "from" : "to"
+          } your account.`
+        );
       }
 
-      const action =
-        currentUIState === "depositing" ? "deposited" : "withdrawn";
-      setOutput(
-        `Thank you. ${formatCurrency(Math.abs(amount))} has been ${action} ${
-          action === "withdrawn" ? "from" : "to"
-        } your account.`
-      );
       bankState.returnToIdle();
       showMenu();
       return;
@@ -83,7 +89,10 @@ function App() {
         bankState.startWithdrawal();
         break;
       case "P":
-        setOutput(bankStatementTable(bankState.getTransactions()));
+        const result = bankState.print();
+        if (result.result && !("reason" in result.result)) {
+          setOutput(bankStatementTable(result.result));
+        }
         showMenu();
         break;
       case "Q":
