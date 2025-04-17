@@ -1,16 +1,13 @@
 import { useEffect, useState } from "react";
-import { Transaction } from "./types/transaction";
+import { BankState } from "./features/bank/BankState";
 import { formatCurrency } from "./utils/formatCurrency";
 import { formatDate } from "./utils/formatDate";
 
 function App() {
   const [input, setInput] = useState("");
   const [output, setOutput] = useState("");
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [currentBalance, setCurrentBalance] = useState(0);
-  const [awaitingAmount, setAwaitingAmount] = useState(false);
-  const [lastCommand, setLastCommand] = useState("");
   const [showCursor, setShowCursor] = useState(true);
+  const [bankState] = useState(() => new BankState());
 
   // Blinking cursor effect
   useEffect(() => {
@@ -22,67 +19,72 @@ function App() {
 
   const handleCommand = (command: string) => {
     const cmd = command.trim().toUpperCase();
+    const currentUIState = bankState.getUIState();
 
-    if (awaitingAmount) {
-      const amount = parseFloat(command);
-      if (isNaN(amount) || amount <= 0) {
-        setOutput("Invalid amount. Please enter a positive number.");
-        setAwaitingAmount(false);
-        return;
-      }
-
-      const newBalance =
-        lastCommand === "D" ? currentBalance + amount : currentBalance - amount;
-
-      if (lastCommand === "W" && newBalance < 0) {
-        setOutput("Insufficient funds for withdrawal.");
-        setAwaitingAmount(false);
-        return;
-      }
-
-      const transaction: Transaction = {
-        date: new Date(),
-        amount: lastCommand === "D" ? amount : -amount,
-        balance: newBalance,
-      };
-
-      setTransactions([...transactions, transaction]);
-      setCurrentBalance(newBalance);
-      setAwaitingAmount(false);
-
-      const action = lastCommand === "D" ? "deposited" : "withdrawn";
-      setOutput(
-        `Thank you. ${formatCurrency(amount)} has been ${action} ${
-          action === "withdrawn" ? "from" : "to"
-        } your account.\n\n` +
-          "Is there anything else you'd like to do?\n" +
-          "[D]eposit\n" +
-          "[W]ithdraw\n" +
-          "[P]rint statement\n" +
-          "[Q]uit"
-      );
+    // Handle 'Q' command to exit input states
+    if (cmd === "Q" && bankState.isAwaitingInput()) {
+      setOutput("Transaction cancelled.");
+      bankState.returnToIdle();
+      showMenu();
       return;
     }
 
-    let statement: string;
+    if (bankState.isAwaitingInput()) {
+      const amount = parseFloat(command);
+      if (isNaN(amount)) {
+        setOutput("Invalid amount. Please enter a number or 'Q' to cancel.");
+        return;
+      }
+      if (amount <= 0) {
+        setOutput(
+          "Invalid amount. Please enter a positive number or 'Q' to cancel."
+        );
+        return;
+      }
+
+      const success =
+        currentUIState === "depositing"
+          ? bankState.deposit(amount)
+          : bankState.withdraw(amount);
+
+      if (!success) {
+        setOutput(
+          currentUIState === "withdrawing"
+            ? "Insufficient funds for withdrawal. Please try a different amount or 'Q' to cancel."
+            : "Invalid amount. Please try again or 'Q' to cancel."
+        );
+        return;
+      }
+
+      const action =
+        currentUIState === "depositing" ? "deposited" : "withdrawn";
+      setOutput(
+        `Thank you. ${formatCurrency(Math.abs(amount))} has been ${action} ${
+          action === "withdrawn" ? "from" : "to"
+        } your account.`
+      );
+      bankState.returnToIdle();
+      showMenu();
+      return;
+    }
+
     switch (cmd) {
       case "D":
-        setOutput("Please enter the amount to deposit:");
-        setAwaitingAmount(true);
-        setLastCommand("D");
+        setOutput("Please enter the amount to deposit (or 'Q' to cancel):");
+        bankState.startDeposit();
         break;
       case "W":
-        setOutput("Please enter the amount to withdraw:");
-        setAwaitingAmount(true);
-        setLastCommand("W");
+        setOutput("Please enter the amount to withdraw (or 'Q' to cancel):");
+        bankState.startWithdrawal();
         break;
       case "P":
+        const transactions = bankState.getTransactions();
         if (transactions.length === 0) {
           setOutput("No transactions to display.");
           showMenu();
           return;
         }
-        statement = [
+        const statement = [
           "Date                  | Amount  | Balance",
           ...transactions.map(
             (t) =>
@@ -99,6 +101,8 @@ function App() {
           "Thank you for banking with AwesomeGIC Bank.\nHave a nice day!"
         );
         break;
+      case "":
+        break;
       default:
         setOutput("Invalid command. Please try again.");
         showMenu();
@@ -109,7 +113,7 @@ function App() {
     setOutput(
       (prev) =>
         prev +
-        "\n\n" +
+        "\n" +
         [
           "Is there anything else you'd like to do?",
           "[D]eposit",

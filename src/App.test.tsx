@@ -21,7 +21,9 @@ describe("App", () => {
     // Enter deposit command
     fireEvent.change(input, { target: { value: "D" } });
     fireEvent.keyDown(input, { key: "Enter" });
-    expect(output.textContent).toContain("Please enter the amount to deposit:");
+    expect(output.textContent).toContain(
+      "Please enter the amount to deposit (or 'Q' to cancel):"
+    );
 
     // Enter amount
     fireEvent.change(input, { target: { value: "100" } });
@@ -46,7 +48,7 @@ describe("App", () => {
     fireEvent.change(input, { target: { value: "W" } });
     fireEvent.keyDown(input, { key: "Enter" });
     expect(output.textContent).toContain(
-      "Please enter the amount to withdraw:"
+      "Please enter the amount to withdraw (or 'Q' to cancel):"
     );
 
     // Enter withdrawal amount
