@@ -1,0 +1,102 @@
+name: Test
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+          run_install: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install
+
+      - name: Run Vitest tests
+        id: vitest
+        run: |
+          pnpm test > vitest-results.txt
+          echo "vitest_status=$?" >> $GITHUB_OUTPUT
+          echo "vitest_results<<EOF" >> $GITHUB_OUTPUT
+          cat vitest-results.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Run Playwright tests
+        id: playwright
+        run: |
+          pnpm test:e2e > playwright-results.txt
+          echo "playwright_status=$?" >> $GITHUB_OUTPUT
+          echo "playwright_results<<EOF" >> $GITHUB_OUTPUT
+          cat playwright-results.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Upload test coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/
+          if-no-files-found: warn
+
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        if: always()
+        with:
+          script: |
+            const vitestStatus = ${{ steps.vitest.outputs.vitest_status }};
+            const playwrightStatus = ${{ steps.playwright.outputs.playwright_status }};
+            const vitestResults = `${{ steps.vitest.outputs.vitest_results }}`;
+            const playwrightResults = `${{ steps.playwright.outputs.playwright_results }}`;
+            const vitestEmoji = vitestStatus === 0 ? '✅' : '❌';
+            const playwrightEmoji = playwrightStatus === 0 ? '✅' : '❌';
+            const comment = [
+              '### Test Results',
+              '',
+              `#### Unit Tests (Vitest) ${vitestEmoji}`,
+              '```',
+              vitestResults,
+              '```',
+              '',
+              `#### E2E Tests (Playwright) ${playwrightEmoji}`,
+              '```',
+              playwrightResults,
+              '```'
+            ].join('\n');
+
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
