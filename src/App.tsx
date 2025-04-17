@@ -1,20 +1,26 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BankState } from "./features/bank/BankState";
+import { cn } from "./utils/cn";
 import { formatCurrency } from "./utils/formatCurrency";
 import { formatDate } from "./utils/formatDate";
 
+const WELCOME_MESSAGE =
+  "Welcome to AwesomeGIC Bank! What would you like to do?\n[D]eposit\n[W]ithdraw\n[P]rint statement\n[Q]uit";
+
 function App() {
   const [input, setInput] = useState("");
-  const [output, setOutput] = useState("");
-  const [showCursor, setShowCursor] = useState(true);
+  const [output, setOutput] = useState(WELCOME_MESSAGE);
   const [bankState] = useState(() => new BankState());
+  const [showProgress, setShowProgress] = useState(false);
+  const timeoutRef = useRef<any>(null);
 
-  // Blinking cursor effect
+  // Cleanup timeout on unmount
   useEffect(() => {
-    const interval = setInterval(() => {
-      setShowCursor((prev) => !prev);
-    }, 500);
-    return () => clearInterval(interval);
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
   }, []);
 
   const handleCommand = (command: string) => {
@@ -97,9 +103,17 @@ function App() {
         showMenu();
         break;
       case "Q":
+        bankState.reset();
         setOutput(
           "Thank you for banking with AwesomeGIC Bank.\nHave a nice day!"
         );
+
+        setShowProgress(true);
+
+        timeoutRef.current = setTimeout(() => {
+          setShowProgress(false);
+          setOutput(WELCOME_MESSAGE);
+        }, 2000);
         break;
       case "":
         break;
@@ -125,20 +139,45 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4 w-full">
+    <div
+      className="min-h-screen bg-black flex items-start p-4"
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const input = document.querySelector("input");
+        if (input) input.focus();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Tab") {
+          e.preventDefault();
+        }
+      }}
+    >
       <div className="w-full max-w-3xl bg-black text-green-500 font-mono p-6">
         <div className="mb-4">
           <pre className="whitespace-pre-wrap" data-testid="output">
-            {output ||
-              "Welcome to AwesomeGIC Bank! What would you like to do?\n[D]eposit\n[W]ithdraw\n[P]rint statement\n[Q]uit"}
+            {output}
           </pre>
+          {showProgress && (
+            <div className="w-full h-1 bg-green-900 mt-2">
+              <div
+                className="h-full bg-green-500 animate-progress"
+                style={{ animationDuration: "2s" }}
+              ></div>
+            </div>
+          )}
         </div>
 
-        <div className="flex items-center">
-          <span className="text-green-500 mr-2">$</span>
+        <div
+          className={cn("flex items-center", {
+            "opacity-0": showProgress,
+          })}
+        >
+          <span className="text-green-500 mr-2">$&nbsp;</span>
           <input
             type="text"
             value={input}
+            data-testid="command-input"
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
@@ -148,12 +187,11 @@ function App() {
             }}
             className="bg-black text-green-500 outline-none flex-1"
             autoFocus
+            onBlur={(e) => {
+              e.preventDefault();
+              e.target.focus();
+            }}
           />
-          <span
-            className={`w-2 h-6 bg-green-500 ml-1 ${
-              showCursor ? "opacity-100" : "opacity-0"
-            }`}
-          ></span>
         </div>
       </div>
     </div>
