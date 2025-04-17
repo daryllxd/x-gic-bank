@@ -4,6 +4,9 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  pull-requests: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -42,10 +45,22 @@ jobs:
         run: pnpm exec playwright install
 
       - name: Run Vitest tests
-        run: pnpm test
+        id: vitest
+        run: |
+          pnpm test > vitest-results.txt
+          echo "vitest_status=$?" >> $GITHUB_OUTPUT
+          echo "vitest_results<<EOF" >> $GITHUB_OUTPUT
+          cat vitest-results.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Run Playwright tests
-        run: pnpm test:e2e
+        id: playwright
+        run: |
+          pnpm test:e2e > playwright-results.txt
+          echo "playwright_status=$?" >> $GITHUB_OUTPUT
+          echo "playwright_results<<EOF" >> $GITHUB_OUTPUT
+          cat playwright-results.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Upload test coverage
         uses: actions/upload-artifact@v4
@@ -53,3 +68,35 @@ jobs:
           name: coverage
           path: coverage/
           if-no-files-found: warn
+
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        if: always()
+        with:
+          script: |
+            const vitestStatus = ${{ steps.vitest.outputs.vitest_status }};
+            const playwrightStatus = ${{ steps.playwright.outputs.playwright_status }};
+            const vitestResults = `${{ steps.vitest.outputs.vitest_results }}`;
+            const playwrightResults = `${{ steps.playwright.outputs.playwright_results }}`;
+            const vitestEmoji = vitestStatus === 0 ? '✅' : '❌';
+            const playwrightEmoji = playwrightStatus === 0 ? '✅' : '❌';
+            const comment = [
+              '### Test Results',
+              '',
+              `#### Unit Tests (Vitest) ${vitestEmoji}`,
+              '```',
+              vitestResults,
+              '```',
+              '',
+              `#### E2E Tests (Playwright) ${playwrightEmoji}`,
+              '```',
+              playwrightResults,
+              '```'
+            ].join('\n');
+
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
