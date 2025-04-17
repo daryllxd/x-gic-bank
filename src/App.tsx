@@ -103,6 +103,7 @@ function App() {
         showMenu();
         break;
       case "Q":
+        bankState.reset();
         setOutput(
           "Thank you for banking with AwesomeGIC Bank.\nHave a nice day!"
         );
@@ -176,6 +177,7 @@ function App() {
           <input
             type="text"
             value={input}
+            data-testid="command-input"
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
