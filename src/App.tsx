@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { BankState } from "./features/bank/BankState";
 import { formatCurrency } from "./utils/formatCurrency";
 import { formatDate } from "./utils/formatDate";
@@ -6,16 +6,7 @@ import { formatDate } from "./utils/formatDate";
 function App() {
   const [input, setInput] = useState("");
   const [output, setOutput] = useState("");
-  const [showCursor, setShowCursor] = useState(true);
   const [bankState] = useState(() => new BankState());
-
-  // Blinking cursor effect
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setShowCursor((prev) => !prev);
-    }, 500);
-    return () => clearInterval(interval);
-  }, []);
 
   const handleCommand = (command: string) => {
     const cmd = command.trim().toUpperCase();
@@ -135,7 +126,7 @@ function App() {
         </div>
 
         <div className="flex items-center">
-          <span className="text-green-500 mr-2">$</span>
+          <span className="text-green-500 mr-2">$&nbsp;</span>
           <input
             type="text"
             value={input}
@@ -149,11 +140,6 @@ function App() {
             className="bg-black text-green-500 outline-none flex-1"
             autoFocus
           />
-          <span
-            className={`w-2 h-6 bg-green-500 ml-1 ${
-              showCursor ? "opacity-100" : "opacity-0"
-            }`}
-          ></span>
         </div>
       </div>
     </div>
