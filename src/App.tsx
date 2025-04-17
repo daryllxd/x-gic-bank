@@ -1,37 +1,159 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+interface Transaction {
+  date: Date;
+  amount: number;
+  balance: number;
+}
 
 function App() {
   const [input, setInput] = useState("");
   const [output, setOutput] = useState("");
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [currentBalance, setCurrentBalance] = useState(0);
+  const [awaitingAmount, setAwaitingAmount] = useState(false);
+  const [lastCommand, setLastCommand] = useState("");
+  const [showCursor, setShowCursor] = useState(true);
+
+  // Blinking cursor effect
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setShowCursor((prev) => !prev);
+    }, 500);
+    return () => clearInterval(interval);
+  }, []);
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(amount);
+  };
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleString("en-US", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+    });
+  };
 
   const handleCommand = (command: string) => {
-    const [cmd, ...args] = command.trim().split(" ");
+    const cmd = command.trim().toUpperCase();
 
-    switch (cmd.toUpperCase()) {
-      case "A":
-        setOutput("apple");
+    if (awaitingAmount) {
+      const amount = parseFloat(command);
+      if (isNaN(amount) || amount <= 0) {
+        setOutput("Invalid amount. Please enter a positive number.");
+        setAwaitingAmount(false);
+        return;
+      }
+
+      const newBalance =
+        lastCommand === "D" ? currentBalance + amount : currentBalance - amount;
+
+      if (lastCommand === "W" && newBalance < 0) {
+        setOutput("Insufficient funds for withdrawal.");
+        setAwaitingAmount(false);
+        return;
+      }
+
+      const transaction: Transaction = {
+        date: new Date(),
+        amount: lastCommand === "D" ? amount : -amount,
+        balance: newBalance,
+      };
+
+      setTransactions([...transactions, transaction]);
+      setCurrentBalance(newBalance);
+      setAwaitingAmount(false);
+
+      const action = lastCommand === "D" ? "deposited" : "withdrawn";
+      setOutput(
+        `Thank you. ${formatCurrency(amount)} has been ${action} ${
+          action === "withdrawn" ? "from" : "to"
+        } your account.\n\n` +
+          "Is there anything else you'd like to do?\n" +
+          "[D]eposit\n" +
+          "[W]ithdraw\n" +
+          "[P]rint statement\n" +
+          "[Q]uit"
+      );
+      return;
+    }
+
+    let statement: string;
+    switch (cmd) {
+      case "D":
+        setOutput("Please enter the amount to deposit:");
+        setAwaitingAmount(true);
+        setLastCommand("D");
         break;
-      case "B":
-        setOutput("Banana");
+      case "W":
+        setOutput("Please enter the amount to withdraw:");
+        setAwaitingAmount(true);
+        setLastCommand("W");
         break;
-      case "C":
-        if (args.length === 0) {
-          setOutput("Error: Command C requires an argument");
-        } else {
-          setOutput(`Calculate: ${args.join(" ")}`);
+      case "P":
+        if (transactions.length === 0) {
+          setOutput("No transactions to display.");
+          showMenu();
+          return;
         }
+        statement = [
+          "Date                  | Amount  | Balance",
+          ...transactions.map(
+            (t) =>
+              `${formatDate(t.date)} | ${formatCurrency(
+                t.amount
+              )} | ${formatCurrency(t.balance)}`
+          ),
+        ].join("\n");
+        setOutput(statement);
+        showMenu();
+        break;
+      case "Q":
+        setOutput(
+          "Thank you for banking with AwesomeGIC Bank.\nHave a nice day!"
+        );
         break;
       default:
-        setOutput("Unknown command");
+        setOutput("Invalid command. Please try again.");
+        showMenu();
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-6">
-        <h1 className="text-2xl font-bold mb-4 text-center">Command App</h1>
+  const showMenu = () => {
+    setOutput(
+      (prev) =>
+        prev +
+        "\n\n" +
+        [
+          "Is there anything else you'd like to do?",
+          "[D]eposit",
+          "[W]ithdraw",
+          "[P]rint statement",
+          "[Q]uit",
+        ].join("\n")
+    );
+  };
 
+  return (
+    <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4 w-full">
+      <div className="w-full max-w-3xl bg-black text-green-500 font-mono p-6">
         <div className="mb-4">
+          <pre className="whitespace-pre-wrap" data-testid="output">
+            {output ||
+              "Welcome to AwesomeGIC Bank! What would you like to do?\n[D]eposit\n[W]ithdraw\n[P]rint statement\n[Q]uit"}
+          </pre>
+        </div>
+
+        <div className="flex items-center">
+          <span className="text-green-500 mr-2">$</span>
           <input
             type="text"
             value={input}
@@ -42,28 +164,14 @@ function App() {
                 setInput("");
               }
             }}
-            placeholder="Enter command (A, B, or C)"
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="bg-black text-green-500 outline-none flex-1"
+            autoFocus
           />
-        </div>
-
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <p className="text-gray-800">Output:</p>
-          <p
-            data-testid="command-output"
-            className="mt-2 text-lg font-semibold"
-          >
-            {output || "No output yet"}
-          </p>
-        </div>
-
-        <div className="mt-6 text-sm text-gray-600">
-          <p>Available commands:</p>
-          <ul className="list-disc pl-5 mt-2">
-            <li>A - Says "apple"</li>
-            <li>B - Says "Banana"</li>
-            <li>C [argument] - Calculates with the given argument</li>
-          </ul>
+          <span
+            className={`w-2 h-6 bg-green-500 ml-1 ${
+              showCursor ? "opacity-100" : "opacity-0"
+            }`}
+          ></span>
         </div>
       </div>
     </div>
