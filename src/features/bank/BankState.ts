@@ -11,7 +11,7 @@ export class BankState {
   private uiState: UIState = "idle";
   private storage: BankStorage;
 
-  constructor(storage: BankStorage) {
+  constructor(storage: BankStorage = new BankStorage()) {
     this.storage = storage;
     this.transactions = storage.loadTransactions();
     this.uiState = "idle";
