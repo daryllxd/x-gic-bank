@@ -1,6 +1,7 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import "../../../test/matchers";
 import { BankState } from "../BankState";
+import { BankStorage } from "../BankStorage";
 import { createWithdrawCommand } from "./withdraw";
 
 describe("withdraw command", () => {
@@ -8,8 +9,12 @@ describe("withdraw command", () => {
   let withdraw: ReturnType<typeof createWithdrawCommand>;
 
   beforeEach(() => {
-    bank = new BankState();
+    bank = new BankState(new BankStorage());
     withdraw = createWithdrawCommand(bank);
+  });
+
+  afterEach(() => {
+    localStorage.clear();
   });
 
   it("should reject negative or zero amounts", () => {

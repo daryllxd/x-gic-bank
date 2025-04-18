@@ -1,4 +1,5 @@
 import { Transaction } from "../../types/transaction";
+import { BankStorage } from "./BankStorage";
 import { createDepositCommand } from "./commands/deposit";
 import { createPrintCommand } from "./commands/print";
 import { createResetCommand } from "./commands/reset";
@@ -8,9 +9,11 @@ import { UIState } from "./types";
 export class BankState {
   private transactions: Transaction[] = [];
   private uiState: UIState = "idle";
+  private storage: BankStorage;
 
-  constructor() {
-    this.transactions = [];
+  constructor(storage: BankStorage = new BankStorage()) {
+    this.storage = storage;
+    this.transactions = storage.loadTransactions();
     this.uiState = "idle";
   }
 
@@ -37,6 +40,7 @@ export class BankState {
   // Setters (needed for commands)
   addTransaction(transaction: Transaction): void {
     this.transactions.push(transaction);
+    this.storage.saveTransactions(this.transactions);
   }
 
   setUIState(state: UIState): void {
@@ -61,5 +65,6 @@ export class BankState {
 
   resetTransactions(): void {
     this.transactions = [];
+    this.storage.saveTransactions(this.transactions);
   }
 }

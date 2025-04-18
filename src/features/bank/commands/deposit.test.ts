@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import "../../../test/matchers";
 import { BankState } from "../BankState";
 import { MAX_DEPOSIT_AMOUNT } from "../utils";
@@ -11,6 +11,10 @@ describe("deposit command", () => {
   beforeEach(() => {
     bank = new BankState();
     deposit = createDepositCommand(bank);
+  });
+
+  afterEach(() => {
+    localStorage.clear();
   });
 
   it("should reject negative or zero amounts", () => {

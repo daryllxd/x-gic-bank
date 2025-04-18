@@ -19,7 +19,9 @@ test.describe("Printing a statement", () => {
   });
 
   test("should display empty statement", async ({ page }) => {
-    // Clear transactions
+    await page.evaluate(() => {
+      localStorage.clear();
+    });
     await page.reload();
     await page.getByRole("textbox").fill("P");
     await page.keyboard.press("Enter");
