@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { BankState } from "./features/bank/BankState";
 import { bankStatementTable } from "./features/bank/bankStatementTable";
+import { BankStorage } from "./features/bank/BankStorage";
 import { cn } from "./utils/cn";
 import { formatCurrency } from "./utils/formatCurrency";
+
 const WELCOME_MESSAGE = [
   "Welcome to AwesomeGIC Bank! What would you like to do?",
   "[D]eposit",
@@ -14,7 +16,7 @@ const WELCOME_MESSAGE = [
 function App() {
   const [input, setInput] = useState("");
   const [output, setOutput] = useState(WELCOME_MESSAGE);
-  const [bankState] = useState(() => new BankState());
+  const [bankState] = useState(() => new BankState(new BankStorage()));
   const [showProgress, setShowProgress] = useState(false);
   const timeoutRef = useRef<any>(null);
 

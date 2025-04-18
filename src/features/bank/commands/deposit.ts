@@ -30,7 +30,7 @@ export function createDepositCommand(
       balance: newBalance,
     };
 
-    bank.getTransactions().push(transaction);
+    bank.addTransaction(transaction);
     bank.returnToIdle();
 
     return {

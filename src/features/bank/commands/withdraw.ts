@@ -30,7 +30,7 @@ export function createWithdrawCommand(
       balance: newBalance,
     };
 
-    bank.getTransactions().push(transaction);
+    bank.addTransaction(transaction);
     bank.returnToIdle();
 
     return {
