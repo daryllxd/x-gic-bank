@@ -1,6 +1,9 @@
 # X-GIC Bank
 
-Demo: [X-GIC-Bank](http://x-gic-bank.vercel.app/)
+- Demo: [X-GIC-Bank](http://x-gic-bank.vercel.app/)
+- Explanation of submission: [Daryll's Notion](https://daryllxd.notion.site/gic-demo)
+
+![Submission](/public/notion.png)
 
 ![Demo](public/demo.gif)
 
@@ -11,6 +14,12 @@ $ brew install pnpm # Install pnpm
 $ pnpm install
 $ pnpm dev          # Runs app at localhost:5173
 ```
+
+## Architecture
+
+This is is just a drawing - more in the [Daryll's Notion](https://daryllxd.notion.site/gic-demo)
+
+![Architecture](/public/client-side-app.png)
 
 ## Testing
 
