@@ -84,12 +84,12 @@ jobs:
               '### Test Results',
               '',
               `#### Unit Tests (Vitest) ${vitestEmoji}`,
-              '```',
+              '``` shell',
               vitestResults,
               '```',
               '',
               `#### E2E Tests (Playwright) ${playwrightEmoji}`,
-              '```',
+              '``` shell',
               playwrightResults,
               '```'
             ].join('\n');
