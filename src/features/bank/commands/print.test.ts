@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import "../../../test/matchers";
 import { Transaction } from "../../../types/transaction";
 import { BankState } from "../BankState";
 import { createPrintCommand } from "./print";
