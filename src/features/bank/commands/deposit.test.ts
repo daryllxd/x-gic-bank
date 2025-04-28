@@ -1,6 +1,6 @@
+import { BankState } from "@/features/bank/BankState";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import "../../../test/matchers";
-import { BankState } from "../BankState";
 import { MAX_DEPOSIT_AMOUNT } from "../utils";
 import { createDepositCommand } from "./deposit";
 

@@ -1,4 +1,4 @@
-import { Transaction } from "../../types/transaction";
+import { Transaction } from "@/types/transaction";
 import { BankStorage } from "./BankStorage";
 import { createDepositCommand } from "./commands/deposit";
 import { createPrintCommand } from "./commands/print";
