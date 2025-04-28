@@ -47,10 +47,10 @@ jobs:
       - name: Run Vitest tests
         id: vitest
         run: |
-          pnpm test > vitest-results.txt
+          pnpm test --reporter=verbose > vitest-results.txt
           echo "vitest_status=$?" >> $GITHUB_OUTPUT
           echo "vitest_results<<EOF" >> $GITHUB_OUTPUT
-          cat vitest-results.txt >> $GITHUB_OUTPUT
+          sed 's/✓/✅/g; s/✕/❌/g; s/\(.*\.test\.ts\).*/\1/' vitest-results.txt >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Run Playwright tests
@@ -59,7 +59,7 @@ jobs:
           pnpm test:e2e > playwright-results.txt
           echo "playwright_status=$?" >> $GITHUB_OUTPUT
           echo "playwright_results<<EOF" >> $GITHUB_OUTPUT
-          cat playwright-results.txt >> $GITHUB_OUTPUT
+          sed 's/✓/✅/g; s/✕/❌/g' playwright-results.txt >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Upload test coverage
